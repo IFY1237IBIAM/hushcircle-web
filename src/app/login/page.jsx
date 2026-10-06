@@ -89,32 +89,84 @@ const ArrowLeftIcon = ({ size=13, color=C.textMuted }) => (
 // ── 6-digit code input — matches mobile buildCodeInput exactly ─────────────
 function CodeInput({ value, onChange }) {
   const refs = useRef([]);
-  const handleKey = (i, e) => {
-    if (e.key === "Backspace") {
-      const next = [...value]; next[i] = "";
+
+  const handleChange = (i, e) => {
+    const digit = e.target.value.replace(/\D/g, "").slice(-1);
+
+    if (!digit) {
+      const next = [...value];
+      next[i] = "";
       onChange(next);
-      if (i > 0) refs.current[i-1]?.focus();
-    } else if (/^\d$/.test(e.key)) {
-      const next = [...value]; next[i] = e.key;
-      onChange(next);
-      if (i < 5) refs.current[i+1]?.focus();
+      return;
+    }
+
+    const next = [...value];
+    next[i] = digit;
+    onChange(next);
+
+    if (i < 5) {
+      refs.current[i + 1]?.focus();
     }
   };
-  const handlePaste = (e) => {
-    const digits = e.clipboardData.getData("text").replace(/\D/g,"").slice(0,6).split("");
-    if (digits.length === 6) { onChange(digits); refs.current[5]?.focus(); }
+
+  const handleKeyDown = (i, e) => {
+    if (e.key === "Backspace" && !value[i] && i > 0) {
+      const next = [...value];
+      next[i - 1] = "";
+      onChange(next);
+      refs.current[i - 1]?.focus();
+    }
   };
+
+  const handlePaste = (e) => {
+    const digits = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6)
+      .split("");
+
+    if (digits.length === 6) {
+      onChange(digits);
+      refs.current[5]?.focus();
+    }
+  };
+
   return (
-    <div style={{ display:"flex", gap:10, justifyContent:"center", margin:"4px 0" }}>
+    <div
+      style={{
+        display: "flex",
+        gap: 10,
+        justifyContent: "center",
+        margin: "4px 0",
+      }}
+    >
       {value.map((digit, i) => (
-        <input key={i} ref={el=>refs.current[i]=el} type="password" value={digit}
-          inputMode="numeric" maxLength={1} readOnly={false}
-          onChange={()=>{}} onKeyDown={e=>handleKey(i,e)} onPaste={handlePaste}
-          onFocus={e=>e.target.select()}
-          style={{ width:46, height:58, textAlign:"center", fontSize:22, fontWeight:700,
-            color:C.text, backgroundColor:digit?C.accent+"15":C.card,
-            border:`1.5px solid ${digit?C.accent:C.border}`,
-            borderRadius:12, outline:"none", fontFamily:"monospace" }} />
+        <input
+          key={i}
+          ref={(el) => (refs.current[i] = el)}
+          type="password"
+          value={digit}
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={1}
+          onChange={(e) => handleChange(i, e)}
+          onKeyDown={(e) => handleKeyDown(i, e)}
+          onPaste={handlePaste}
+          onFocus={(e) => e.target.select()}
+          style={{
+            width: 46,
+            height: 58,
+            textAlign: "center",
+            fontSize: 22,
+            fontWeight: 700,
+            color: C.text,
+            backgroundColor: digit ? C.accent + "15" : C.card,
+            border: `1.5px solid ${digit ? C.accent : C.border}`,
+            borderRadius: 12,
+            outline: "none",
+            fontFamily: "monospace",
+          }}
+        />
       ))}
     </div>
   );

@@ -79,7 +79,7 @@ export default function CheckInPage() {
     finally { setSubmitting(false); }
   };
 
-  const getMood = key => MOOD_CONFIG[key] || MOOD_CONFIG.calm;
+  const getMood = key => MOOD_CONFIG[key] || MOOD_CONFIG.sadness;
   const nextGoal  = STREAK_GOALS.find(m => m > streak.currentStreak) || null;
   const progress  = nextGoal ? (streak.currentStreak / nextGoal) * 100 : 100;
   const flameColor = streak.currentStreak >= 30 ? "#FF6B35" : streak.currentStreak >= 14 ? "#D4A44C" : streak.currentStreak >= 7 ? "#9B6FD4" : "#4CAF8F";

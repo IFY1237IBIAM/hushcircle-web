@@ -9,21 +9,76 @@ import { BackIcon, ShieldIcon, LockIcon, EyeIcon, EyeOffIcon } from "../../compo
 const C = { bg:"#0F0A1E", card:"#1A1330", border:"#2D2450", accent:"#9B6FD4", accentSoft:"#C4A3E8", text:"#EDE8F5", textMuted:"#8B7FA8", success:"#4CAF8F", error:"#D4607A", warning:"#D4A44C", inputBg:"#0F0A1E" };
 const PIN_LENGTH = 6;
 
-function PinInput({ length=PIN_LENGTH, value, onChange }) {
+function PinInput({ length = PIN_LENGTH, value, onChange }) {
   const refs = useRef([]);
-  const pins = value.split("").concat(Array(length).fill("")).slice(0,length);
-  const handleKey = (i,e) => {
-    if (e.key==="Backspace") { const next=[...pins]; next[i]=""; onChange(next.join("").slice(0,i)||next.slice(0,i).join("")); if (i>0) refs.current[i-1]?.focus(); }
-    else if (/^\d$/.test(e.key)) { const next=[...pins]; next[i]=e.key; onChange(next.join("")); if (i<length-1) refs.current[i+1]?.focus(); }
+
+  const pins = value
+    .split("")
+    .concat(Array(length).fill(""))
+    .slice(0, length);
+
+  const handleChange = (i, e) => {
+    const digit = e.target.value.replace(/\D/g, "").slice(-1);
+
+    if (!digit) {
+      const next = [...pins];
+      next[i] = "";
+      onChange(next.join(""));
+      return;
+    }
+
+    const next = [...pins];
+    next[i] = digit;
+    onChange(next.join(""));
+
+    if (i < length - 1) {
+      refs.current[i + 1]?.focus();
+    }
   };
+
+  const handleKeyDown = (i, e) => {
+    if (e.key === "Backspace" && !pins[i] && i > 0) {
+      const next = [...pins];
+      next[i - 1] = "";
+      onChange(next.join(""));
+      refs.current[i - 1]?.focus();
+    }
+  };
+
   return (
-    <div style={{ display:"flex", gap:10, justifyContent:"center", margin:"0 auto" }}>
-      {pins.map((digit,i)=>(
-        <input key={i} ref={el=>refs.current[i]=el} type="password" value={digit} inputMode="numeric" maxLength={1}
-          onChange={()=>{}}
-          onKeyDown={e=>handleKey(i,e)}
-          onFocus={e=>e.target.select()}
-          style={{ width:52, height:64, textAlign:"center", fontSize:28, fontWeight:700, color:C.text, backgroundColor:digit?C.accent+"11":C.inputBg, border:`1.5px solid ${digit?C.accent:C.border}`, borderRadius:14, outline:"none", fontFamily:"monospace" }}
+    <div
+      style={{
+        display: "flex",
+        gap: 10,
+        justifyContent: "center",
+        margin: "0 auto",
+      }}
+    >
+      {pins.map((digit, i) => (
+        <input
+          key={i}
+          ref={(el) => (refs.current[i] = el)}
+          type="password"
+          value={digit}
+          inputMode="numeric"
+          pattern="[0-9]*"
+          maxLength={1}
+          onChange={(e) => handleChange(i, e)}
+          onKeyDown={(e) => handleKeyDown(i, e)}
+          onFocus={(e) => e.target.select()}
+          style={{
+            width: 52,
+            height: 64,
+            textAlign: "center",
+            fontSize: 28,
+            fontWeight: 700,
+            color: C.text,
+            backgroundColor: digit ? C.accent + "11" : C.inputBg,
+            border: `1.5px solid ${digit ? C.accent : C.border}`,
+            borderRadius: 14,
+            outline: "none",
+            fontFamily: "monospace",
+          }}
         />
       ))}
     </div>
