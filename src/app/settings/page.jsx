@@ -105,7 +105,7 @@ export default function SettingsPage() {
   const [confirmPw,      setConfirmPw]      = useState("");
   const [delPw,          setDelPw]          = useState("");
   const [newPseudonym,   setNewPseudonym]   = useState("");
-  const [pseudonymPw,    setPseudonymPw]    = useState("");
+
   const [saving,         setSaving]         = useState(false);
   const [pwError,        setPwError]        = useState("");
   const [pwSuccess,      setPwSuccess]      = useState("");
@@ -157,18 +157,37 @@ export default function SettingsPage() {
   };
 
   const handleChangePseudonym = async (e) => {
-    e.preventDefault();
-    if (!newPseudonym.trim()) { setPwError("Enter a new pseudonym."); return; }
-    if (!pseudonymPw) { setPwError("Enter your password."); return; }
-    setSaving(true); setPwError("");
-    try {
-      await api.put("/settings/change-pseudonym",{ newPseudonym:newPseudonym.trim(), password:pseudonymPw });
-      updateUser({ pseudonym:newPseudonym.trim() });
-      setPwSuccess("Pseudonym changed 💜");
-      setTimeout(()=>{ setActiveModal(null); setPwSuccess(""); },1500);
-    } catch (e) { setPwError(e.response?.data?.message||"Could not change pseudonym."); }
-    finally { setSaving(false); }
-  };
+  e.preventDefault();
+
+  if (!newPseudonym.trim()) {
+    setPwError("Enter a new pseudonym.");
+    return;
+  }
+
+  setSaving(true);
+  setPwError("");
+
+  try {
+    const res = await api.put("/auth/update-pseudonym", {
+      pseudonym: newPseudonym.trim(),
+    });
+
+    updateUser({ pseudonym: res.data.pseudonym });
+
+    setPwSuccess("Pseudonym changed 💜");
+
+    setTimeout(() => {
+      setActiveModal(null);
+      setPwSuccess("");
+    }, 1500);
+  } catch (e) {
+    setPwError(
+      e.response?.data?.message || "Could not change pseudonym."
+    );
+  } finally {
+    setSaving(false);
+  }
+};
 
   const handleDeleteAccount = async () => {
     if (!delPw) return;
@@ -341,9 +360,7 @@ export default function SettingsPage() {
             <p style={fieldLabel}>New pseudonym (3–20 chars)</p>
             <input value={newPseudonym} onChange={e=>setNewPseudonym(e.target.value)} placeholder="e.g. StarlightHope" maxLength={20}
               style={{ ...inputSt, marginBottom:14 }} onFocus={e=>e.target.style.borderColor=C.accent} onBlur={e=>e.target.style.borderColor=C.border} />
-            <p style={fieldLabel}>Your password</p>
-            <input type="password" value={pseudonymPw} onChange={e=>setPseudonymPw(e.target.value)} placeholder="••••••••"
-              style={{ ...inputSt, marginBottom:14 }} onFocus={e=>e.target.style.borderColor=C.accent} onBlur={e=>e.target.style.borderColor=C.border} />
+    
             {pwError   && <p style={{ color:C.error,   fontSize:13, marginBottom:10 }}>{pwError}</p>}
             {pwSuccess && <p style={{ color:C.success, fontSize:13, marginBottom:10 }}>{pwSuccess}</p>}
             <div style={{ display:"flex", gap:10 }}>
@@ -384,6 +401,11 @@ function Sheet({ children, onClose }) {
     </div>
   );
 }
+{/* HUSH CIRCLE SPINNER */}
+      <HushCircleSpinner
+        visible={submitting}
+        message={spinnerMessage}
+      />
 
 function Spinner() { return <div style={{ width:28, height:28, border:"2px solid #9B6FD4", borderTopColor:"transparent", borderRadius:"50%", animation:"spin 0.8s linear infinite", margin:"0 auto" }} />; }
 const sheetTitle = { color:"#EDE8F5", fontFamily:"DM Serif Display,Georgia,serif", fontSize:22, margin:"0 0 16px" };
