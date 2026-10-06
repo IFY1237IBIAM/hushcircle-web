@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import api from "../../lib/api";
 import HushCircleSpinner from "../../components/HushCircleSpinner";
 import NoNetworkOverlay from "../../components/NoNetworkOverlay";
+import Onboarding from "../../components/Onboarding";
 
 const C = {
   bg:"#0F0A1E", card:"#1A1330", border:"#2D2450",
@@ -242,9 +243,16 @@ export default function LoginPage() {
   const [showNoNetwork, setShowNoNetwork] = useState(false);
   const [spinnerVisible, setSpinnerVisible] = useState(false);
   const [spinnerMsg,     setSpinnerMsg]     = useState("");
+  const [showOnboarding, setShowOnboarding] = useState(null);
 
   useEffect(() => { if (!loading && user) router.push("/feed"); }, [user, loading]);
+  useEffect(() => {
+  if (typeof window === "undefined") return;
 
+  setShowOnboarding(
+    localStorage.getItem("hushcircle_onboarded") !== "true"
+  );
+}, []);
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const t = setInterval(() => setResendCooldown(c=>c-1), 1000);
@@ -371,7 +379,15 @@ export default function LoginPage() {
     }, "Resetting PIN...");
   };
 
-  if (loading || user) return null;
+  if (loading || user || showOnboarding === null) return null;
+
+  if (showOnboarding) {
+    return (
+      <Onboarding
+        onComplete={() => setShowOnboarding(false)}
+      />
+    );
+  }
 
   const inputStyle = (hasErr) => ({ width:"100%", backgroundColor:C.card, border:`1px solid ${hasErr?C.error:C.border}`, borderRadius:12, padding:"14px", color:C.text, fontSize:15, outline:"none", boxSizing:"border-box", fontFamily:"Nunito,sans-serif" });
 
