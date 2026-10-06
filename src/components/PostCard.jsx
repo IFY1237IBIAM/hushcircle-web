@@ -35,7 +35,7 @@ function Avatar({ pseudonym, size = 36, onlineStatus, showOnline, onClick, local
 }
 
 function MoodBadge({ mood }) {
-  const cfg = MOOD_CONFIG[mood] || MOOD_CONFIG.calm;
+  const cfg = MOOD_CONFIG[mood] || MOOD_CONFIG.sadness;
   const CfgIcon = cfg.Icon;
   return (
     <span style={{ display:"inline-flex", alignItems:"center", gap:5, backgroundColor:cfg.color+"22", color:cfg.color, borderRadius:8, padding:"3px 9px", fontSize:11, fontWeight:600 }}>
@@ -79,7 +79,7 @@ export default function PostCard({
 }) {
   const { user } = useAuth();
   const isOwn = post.pseudonym === user?.pseudonym || post._isOwn;
-  const mood  = MOOD_CONFIG[post.mood] || MOOD_CONFIG.calm;
+  const mood = MOOD_CONFIG[post.mood] || MOOD_CONFIG.sadness;
   const localDate = getLocalDateString();
 
   const [reactionCounts, setReactionCounts] = useState(post.reactionCounts || {});
