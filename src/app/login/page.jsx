@@ -93,81 +93,33 @@ function CodeInput({ value, onChange }) {
 
   const handleChange = (i, e) => {
     const digit = e.target.value.replace(/\D/g, "").slice(-1);
-
-    if (!digit) {
-      const next = [...value];
-      next[i] = "";
-      onChange(next);
-      return;
-    }
-
-    const next = [...value];
-    next[i] = digit;
-    onChange(next);
-
-    if (i < 5) {
-      refs.current[i + 1]?.focus();
-    }
+    if (!digit) { const next = [...value]; next[i] = ""; onChange(next); return; }
+    const next = [...value]; next[i] = digit; onChange(next);
+    if (i < 5) refs.current[i + 1]?.focus();
   };
 
   const handleKeyDown = (i, e) => {
     if (e.key === "Backspace" && !value[i] && i > 0) {
-      const next = [...value];
-      next[i - 1] = "";
-      onChange(next);
+      const next = [...value]; next[i - 1] = ""; onChange(next);
       refs.current[i - 1]?.focus();
     }
   };
 
   const handlePaste = (e) => {
-    const digits = e.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, 6)
-      .split("");
-
-    if (digits.length === 6) {
-      onChange(digits);
-      refs.current[5]?.focus();
-    }
+    const digits = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6).split("");
+    if (digits.length === 6) { onChange(digits); refs.current[5]?.focus(); }
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: 10,
-        justifyContent: "center",
-        margin: "4px 0",
-      }}
-    >
+    <div style={{ display:"flex", gap:10, justifyContent:"center", margin:"4px 0" }}>
       {value.map((digit, i) => (
-        <input
-          key={i}
-          ref={(el) => (refs.current[i] = el)}
-          type="password"
-          value={digit}
-          inputMode="numeric"
-          pattern="[0-9]*"
-          maxLength={1}
-          onChange={(e) => handleChange(i, e)}
-          onKeyDown={(e) => handleKeyDown(i, e)}
-          onPaste={handlePaste}
-          onFocus={(e) => e.target.select()}
-          style={{
-            width: 46,
-            height: 58,
-            textAlign: "center",
-            fontSize: 22,
-            fontWeight: 700,
-            color: C.text,
-            backgroundColor: digit ? C.accent + "15" : C.card,
-            border: `1.5px solid ${digit ? C.accent : C.border}`,
-            borderRadius: 12,
-            outline: "none",
-            fontFamily: "monospace",
-          }}
-        />
+        <input key={i} ref={(el) => (refs.current[i] = el)} type="password" value={digit}
+          inputMode="numeric" pattern="[0-9]*" maxLength={1}
+          onChange={(e) => handleChange(i, e)} onKeyDown={(e) => handleKeyDown(i, e)}
+          onPaste={handlePaste} onFocus={(e) => e.target.select()}
+          style={{ width:46, height:58, textAlign:"center", fontSize:22, fontWeight:700, color:C.text,
+            backgroundColor: digit ? C.accent+"15" : C.card,
+            border:`1.5px solid ${digit?C.accent:C.border}`, borderRadius:12, outline:"none", fontFamily:"monospace" }} />
       ))}
     </div>
   );
@@ -176,7 +128,6 @@ function CodeInput({ value, onChange }) {
 function Field({ label, children }) {
   return <div style={{ marginBottom:16 }}><p style={{ color:C.accentSoft, fontSize:13, fontWeight:500, margin:"0 0 8px" }}>{label}</p>{children}</div>;
 }
-
 function SubmitBtn({ onClick, disabled, children }) {
   return (
     <button onClick={onClick} disabled={disabled}
@@ -188,7 +139,6 @@ function SubmitBtn({ onClick, disabled, children }) {
     </button>
   );
 }
-
 function BackLink({ onClick, children }) {
   return (
     <button onClick={onClick} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, background:"none", border:"none", cursor:"pointer", marginTop:20, width:"100%" }}>
@@ -197,7 +147,6 @@ function BackLink({ onClick, children }) {
     </button>
   );
 }
-
 function VerifyCard({ Icon, title, subtitle }) {
   return (
     <div style={{ backgroundColor:C.card, borderRadius:16, padding:24, textAlign:"center", border:`1px solid ${C.border}`, marginBottom:28 }}>
@@ -207,10 +156,26 @@ function VerifyCard({ Icon, title, subtitle }) {
     </div>
   );
 }
-
 function ErrMsg({ msg }) {
   if (!msg) return null;
   return <p style={{ color:C.error, fontSize:12, margin:"4px 0 0" }}>{msg}</p>;
+}
+
+// ── Per-account onboarding flag helpers ──────────────────────────────────────
+// Keyed by email, NOT a global flag. This is the fix: onboarding completion
+// is tied to a specific account, never to "has this browser ever seen it."
+// Logout never touches this — so re-logging into the SAME account correctly
+// skips onboarding, while a brand-new account correctly sees it once.
+function onboardingKey(email) {
+  return `hushcircle_onboarded_${email.trim().toLowerCase()}`;
+}
+function hasCompletedOnboarding(email) {
+  if (typeof window === "undefined" || !email) return true; // never block render on unknown
+  return localStorage.getItem(onboardingKey(email)) === "true";
+}
+function markOnboardingComplete(email) {
+  if (typeof window === "undefined" || !email) return;
+  localStorage.setItem(onboardingKey(email), "true");
 }
 
 export default function LoginPage() {
@@ -243,16 +208,19 @@ export default function LoginPage() {
   const [showNoNetwork, setShowNoNetwork] = useState(false);
   const [spinnerVisible, setSpinnerVisible] = useState(false);
   const [spinnerMsg,     setSpinnerMsg]     = useState("");
-  const [showOnboarding, setShowOnboarding] = useState(null);
 
-  useEffect(() => { if (!loading && user) router.push("/feed"); }, [user, loading]);
+  // ── Onboarding is now a POST-LOGIN gate, not a pre-render gate ──────────────
+  // Previously this was checked on every mount of the login page (including
+  // after logout), which is what caused onboarding to wrongly reappear after
+  // sign-out. The login/join form below ALWAYS renders immediately — no
+  // check happens here anymore. Onboarding only shows AFTER a successful
+  // login, and only for the specific account that hasn't completed it yet.
+  const [showOnboardingFor, setShowOnboardingFor] = useState(null); // null | email
+
   useEffect(() => {
-  if (typeof window === "undefined") return;
+    if (!loading && user && !showOnboardingFor) router.push("/feed");
+  }, [user, loading, showOnboardingFor]);
 
-  setShowOnboarding(
-    localStorage.getItem("hushcircle_onboarded") !== "true"
-  );
-}, []);
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const t = setInterval(() => setResendCooldown(c=>c-1), 1000);
@@ -285,6 +253,15 @@ export default function LoginPage() {
     return Object.keys(e).length === 0;
   };
 
+  // ── Login success now decides: onboarding or straight to feed? ─────────────
+  const completeLogin = (loggedInEmail) => {
+    if (!hasCompletedOnboarding(loggedInEmail)) {
+      setShowOnboardingFor(loggedInEmail); // show onboarding ONCE for this account
+    } else {
+      router.push("/feed");
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validate()) return;
     await withSpinner(async () => {
@@ -299,7 +276,7 @@ export default function LoginPage() {
             setPendingUser(result.pendingUser);
             switchScreen("twostep"); return;
           }
-          router.push("/feed");
+          completeLogin(email);
         } else {
           await signup(pseudonym, email, password);
           setVerifyEmail(email); switchScreen("verify");
@@ -314,7 +291,7 @@ export default function LoginPage() {
     setVerifyLoading(true);
     try {
       await api.post("/email/verify-email", { code, email:verifyEmail });
-      alert("You're verified! Welcome to HushCircle.");
+      alert("You're verified! Sign in to get started.");
       setVerifyCode(Array(6).fill("")); switchScreen("auth");
     } catch (err) { setErrors({ code:err.response?.data?.message||"Invalid or expired code." }); }
     finally { setVerifyLoading(false); }
@@ -361,7 +338,7 @@ export default function LoginPage() {
       try {
         await api.post("/two-step/verify", { pin, email:twoStepEmail });
         await setAuth(pendingToken, pendingUser);
-        router.push("/feed");
+        completeLogin(twoStepEmail);
       } catch (err) { setErrors({ twoStep:err.response?.data?.message||"Incorrect PIN. Try again." }); }
     }, "Verifying PIN...");
   };
@@ -379,15 +356,21 @@ export default function LoginPage() {
     }, "Resetting PIN...");
   };
 
-  if (loading || user || showOnboarding === null) return null;
-
-  if (showOnboarding) {
+  // ── Onboarding renders ONLY right after a successful login for an account
+  // that has never completed it. Never on generic page load, never after logout.
+  if (showOnboardingFor) {
     return (
       <Onboarding
-        onComplete={() => setShowOnboarding(false)}
+        onComplete={() => {
+          markOnboardingComplete(showOnboardingFor);
+          setShowOnboardingFor(null);
+          router.push("/feed");
+        }}
       />
     );
   }
+
+  if (loading || user) return null;
 
   const inputStyle = (hasErr) => ({ width:"100%", backgroundColor:C.card, border:`1px solid ${hasErr?C.error:C.border}`, borderRadius:12, padding:"14px", color:C.text, fontSize:15, outline:"none", boxSizing:"border-box", fontFamily:"Nunito,sans-serif" });
 
@@ -395,14 +378,12 @@ export default function LoginPage() {
     <div style={{ minHeight:"100vh", backgroundColor:C.bg, display:"flex", alignItems:"center", justifyContent:"center", padding:24 }}>
       <div style={{ width:"100%", maxWidth:420 }}>
 
-        {/* Header — matches mobile exactly */}
         <div style={{ textAlign:"center", marginBottom:40 }}>
           <HeartLogoIcon size={52} color={C.accent} />
           <h1 style={{ color:C.text, fontFamily:"DM Serif Display,Georgia,serif", fontSize:42, letterSpacing:1, margin:"8px 0 0" }}>HushCircle</h1>
           <p style={{ color:C.textMuted, fontSize:14, margin:"4px 0 0" }}>A safe space for your heart</p>
         </div>
 
-        {/* ── AUTH SCREEN ── */}
         {screen === "auth" && (
           <>
             <div style={{ display:"flex", backgroundColor:C.card, borderRadius:12, padding:4, marginBottom:28, border:`1px solid ${C.border}` }}>
@@ -478,7 +459,6 @@ export default function LoginPage() {
           </>
         )}
 
-        {/* ── VERIFY EMAIL ── */}
         {screen === "verify" && (
           <>
             <VerifyCard Icon={()=><MailOpenIcon size={44} color={C.accent} />} title="Check your inbox"
@@ -496,7 +476,6 @@ export default function LoginPage() {
           </>
         )}
 
-        {/* ── FORGOT PASSWORD ── */}
         {screen === "forgot" && (
           <>
             <VerifyCard Icon={()=><KeyLargeIcon size={44} color={C.accent} />} title="Reset password" subtitle="Enter your account email and we'll send a reset code." />
@@ -511,7 +490,6 @@ export default function LoginPage() {
           </>
         )}
 
-        {/* ── RESET PASSWORD ── */}
         {screen === "reset" && (
           <>
             <VerifyCard Icon={()=><ShieldIcon size={44} color={C.accent} />} title="Enter reset code"
@@ -535,7 +513,6 @@ export default function LoginPage() {
           </>
         )}
 
-        {/* ── TWO-STEP PIN ── */}
         {screen === "twostep" && (
           <>
             <VerifyCard Icon={()=><LockIcon size={44} color={C.accent} />} title="Two-step verification"
@@ -551,7 +528,6 @@ export default function LoginPage() {
           </>
         )}
 
-        {/* ── TWO-STEP RECOVERY ── */}
         {screen === "tworecover" && (
           <>
             <VerifyCard Icon={()=><LifeBuoyIcon size={44} color={C.accent} />} title="Recover access"
