@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 import { useTheme } from "../../context/ThemeContext";
 import api from "../../lib/api";
-import HushCircleSpinner from "../../components/HushCircleSpinner";
+
 import Navbar from "../../components/Navbar";
 import { BackIcon, ShieldIcon, LockIcon, EyeIcon, EyeOffIcon, AlertIcon, ArrowRightIcon } from "../../components/Icons";
 
@@ -210,7 +210,16 @@ export default function SettingsPage() {
     } catch { alert("Could not unblock user."); }
   };
 
-  const openModal = (name) => { setActiveModal(name); setPwError(""); setPwSuccess(""); setCurrentPw(""); setNewPw(""); setConfirmPw(""); setDelPw(""); setNewPseudonym(""); setPseudonymPw(""); };
+  const openModal = (name) => {
+  setActiveModal(name);
+  setPwError("");
+  setPwSuccess("");
+  setCurrentPw("");
+  setNewPw("");
+  setConfirmPw("");
+  setDelPw("");
+  setNewPseudonym("");
+};
   const closeModal = () => { setActiveModal(null); setPwError(""); setPwSuccess(""); };
 
   const lastChanged = user?.pseudonymLastChangedAt ? new Date(user.pseudonymLastChangedAt) : null;
@@ -401,11 +410,7 @@ function Sheet({ children, onClose }) {
     </div>
   );
 }
-{/* HUSH CIRCLE SPINNER */}
-      <HushCircleSpinner
-        visible={submitting}
-        message={spinnerMessage}
-      />
+
 
 function Spinner() { return <div style={{ width:28, height:28, border:"2px solid #9B6FD4", borderTopColor:"transparent", borderRadius:"50%", animation:"spin 0.8s linear infinite", margin:"0 auto" }} />; }
 const sheetTitle = { color:"#EDE8F5", fontFamily:"DM Serif Display,Georgia,serif", fontSize:22, margin:"0 0 16px" };
