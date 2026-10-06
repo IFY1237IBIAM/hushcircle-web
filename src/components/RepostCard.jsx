@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import api from "../lib/api";
-import { C } from "../lib/constants";
+import { COLORS as C } from "../lib/constants";
 import { timeAgo } from "../utils/time";
 import {
   RepostIcon,
