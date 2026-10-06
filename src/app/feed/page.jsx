@@ -6,6 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 import api from "../../lib/api";
 import Navbar from "../../components/Navbar";
 import PostCard from "../../components/PostCard";
+import RepostCard from "../../components/RepostCard";
 import CreatePostModal from "../../components/CreatePostModal";
 import NoNetworkOverlay from "../../components/NoNetworkOverlay";
 import HushCircleSpinner from "../../components/HushCircleSpinner";
@@ -856,49 +857,65 @@ export default function FeedPage() {
               </div>
             )}
 
-            {posts.map((post) => (
-              <PostCard
-                key={post._id}
-                post={post}
-                onDeleted={(id) =>
-                  setPosts((prev) =>
-                    prev.filter(
-                      (p) => p._id !== id
-                    )
-                  )
-                }
-                onHidden={
-                  post._isOwn
-                    ? undefined
-                    : handleHidden
-                }
-                onEdited={(
-                  id,
-                  content,
-                  mood
-                ) =>
-                  setPosts((prev) =>
-                    prev.map((p) =>
-                      p._id === id
-                        ? {
-                            ...p,
-                            content,
-                            mood,
-                          }
-                        : p
-                    )
-                  )
-                }
-                onReposted={handleReposted}
-                onUnreposted={handleUnreposted}
-                onRepostPress={
-                  post.allowReposts !== false &&
-                  !post._isOwn
-                    ? openRepostConfirm
-                    : undefined
-                }
-              />
-            ))}
+            {posts.map((post) =>
+  post.isRepostItem ? (
+    <RepostCard
+      key={post.repostId || post._id}
+      repostItem={post}
+      currentUserId={user?._id || user?.id}
+      currentPseudonym={user?.pseudonym}
+      onDeleted={(id) =>
+        setPosts((prev) =>
+          prev.filter((p) => p._id !== id)
+        )
+      }
+      onHidden={handleHidden}
+      onEdited={(id, content, mood) =>
+        setPosts((prev) =>
+          prev.map((p) =>
+            p._id === id
+              ? { ...p, content, mood }
+              : p
+          )
+        )
+      }
+      onReposted={handleReposted}
+      onUnreposted={handleUnreposted}
+    />
+  ) : (
+    <PostCard
+      key={post._id}
+      post={post}
+      onDeleted={(id) =>
+        setPosts((prev) =>
+          prev.filter((p) => p._id !== id)
+        )
+      }
+      onHidden={
+        post._isOwn
+          ? undefined
+          : handleHidden
+      }
+      onEdited={(id, content, mood) =>
+        setPosts((prev) =>
+          prev.map((p) =>
+            p._id === id
+              ? { ...p, content, mood }
+              : p
+          )
+        )
+      }
+      onReposted={handleReposted}
+      onUnreposted={handleUnreposted}
+      onRepostPress={
+        post.allowReposts !== false &&
+        !post._isOwn
+          ? openRepostConfirm
+          : undefined
+      }
+    />
+  )
+)}
 
             {loadingMore && (
               <div
