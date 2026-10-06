@@ -1,0 +1,56 @@
+/* ── HushCircle Dark palette defaults ──────────────────────────────────────── */
+:root {
+  --hc-bg:          #0F0A1E;
+  --hc-card:        #1A1330;
+  --hc-card-alt:    #201840;
+  --hc-border:      #2D2450;
+  --hc-accent:      #9B6FD4;
+  --hc-accent-soft: #C4A3E8;
+  --hc-text:        #EDE8F5;
+  --hc-text-muted:  #8B7FA8;
+  --hc-success:     #4CAF8F;
+  --hc-error:       #D4607A;
+  --hc-warning:     #D4A44C;
+  --hc-input-bg:    #0F0A1E;
+}
+
+[data-theme="light"] {
+  --hc-bg:          #F8F6FF;
+  --hc-card:        #FFFFFF;
+  --hc-card-alt:    #F2EEFF;
+  --hc-border:      #E0D8F5;
+  --hc-accent:      #7B52C7;
+  --hc-accent-soft: #9B6FD4;
+  --hc-text:        #1A1330;
+  --hc-text-muted:  #6B5F8A;
+  --hc-success:     #2E9C72;
+  --hc-error:       #C04060;
+  --hc-warning:     #B8862A;
+  --hc-input-bg:    #F2EEFF;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0; padding: 0;
+  background-color: var(--hc-bg);
+  color: var(--hc-text);
+  font-family: "Nunito", "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+@keyframes slideDown { from { transform:translateY(-100%); } to { transform:translateY(0); } }
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--hc-border); border-radius: 2px; }
+
+/* Link resets */
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; }
+input, textarea { font-family: inherit; }
